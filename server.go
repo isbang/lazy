@@ -78,8 +78,9 @@ func (s *Server) Run() error {
 
 	queues := make([]string, 0, len(s.handlerMap))
 	for queue := range s.handlerMap {
-		s.wg.Add(1)
+		s.wg.Add(2)
 		go s.delayJobScheduler(queue)
+		go s.deadJobCleaner(queue)
 
 		queues = append(queues, queuePrefix+queue)
 	}
@@ -201,6 +202,33 @@ func (s *Server) delayJobScheduler(queue string) {
 					s.GracefulStop()
 					return
 				}
+			}
+		}
+	}
+}
+
+func (s *Server) deadJobCleaner(queue string) {
+	defer s.wg.Done()
+
+	l := log.With().
+		Str("queue", queue).
+		Str("method", "deadJobCleaner").
+		Logger()
+
+	ctx := context.Background()
+	tc := time.NewTicker(time.Second)
+	for {
+		select {
+		case <-s.ctx.Done():
+			return
+		case now := <-tc.C:
+			if err := s.cc.ZRemRangeByScore(
+				ctx, deadPrefix+queue,
+				"-inf", strconv.FormatInt(now.Unix(), 10),
+			).Err(); err != nil {
+				l.Error().Err(err).Msg("fail to cleanup dead job")
+				s.GracefulStop()
+				return
 			}
 		}
 	}
