@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -80,7 +81,7 @@ func (s *Server) Run() error {
 		s.wg.Add(1)
 		go s.delayJobScheduler(queue)
 
-		queues = append(queues, queue)
+		queues = append(queues, queuePrefix+queue)
 	}
 
 	defer s.wg.Wait()
@@ -107,7 +108,7 @@ func (s *Server) Run() error {
 		}
 
 		s.wg.Add(1)
-		go s.handleJob(result[0], result[1])
+		go s.handleJob(strings.TrimPrefix(result[0], queuePrefix), result[1])
 	}
 }
 
