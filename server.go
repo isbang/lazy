@@ -130,21 +130,29 @@ func (s *Server) handleJob(queue string, jobstr string) {
 }
 
 func (s *Server) addDeadJob(queue string, jobstr string, reason error) {
+	l := log.With().
+		Str("queue", queue).
+		Str("method", "addDeadJob").
+		Str("job", jobstr).
+		Logger()
+
 	jb, err := json.Marshal(deadJob{
 		Job:    jobstr,
 		Reason: reason.Error(),
 	})
 	if err != nil {
-		log.Panic().Err(err).Msg("fail to json marshal job")
+		l.Error().Err(err).Msg("fail to json marshal job")
+		s.GracefulStop()
+		return
 	}
 
 	if err := s.cc.ZAdd(context.Background(), deadPrefix+queue, &redis.Z{
 		Score:  float64(time.Now().Add(s.DeadJobTTL).Unix()),
 		Member: string(jb),
 	}).Err(); err != nil {
-		log.Error().Err(err).
-			Str("job", queue).
-			Msg("fail to add dead job")
+		l.Error().Err(err).Msg("fail to add dead job")
+		s.GracefulStop()
+		return
 	}
 }
 
