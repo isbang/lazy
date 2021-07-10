@@ -1,0 +1,11 @@
+package job
+
+import "github.com/isbang/lazy"
+
+type {{ .Name }} struct {
+	lazy.EmptyJob
+}
+
+func (x {{ .Name }}) LazyQueueName() string {
+	return "{{ .Name }}"
+}
