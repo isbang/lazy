@@ -166,14 +166,13 @@ func (s *Server) delayJobScheduler(queue string) {
 		Str("method", "delayJobScheduler").
 		Logger()
 
+	ctx := context.Background()
 	tc := time.NewTicker(time.Second)
 	for {
 		select {
 		case <-s.ctx.Done():
 			return
 		case now := <-tc.C:
-			ctx := context.Background()
-
 			jobs, err := s.cc.ZRangeByScore(ctx, delayPrefix+queue, &redis.ZRangeBy{
 				Min: "-inf",
 				Max: strconv.FormatInt(now.Unix(), 10),
