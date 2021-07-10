@@ -232,34 +232,3 @@ func (s *Server) deadJobCleaner(queue string) {
 		}
 	}
 }
-
-func (s *Server) scheduleDeadJob(queue string, deadjob string) error {
-	done, err := s.cc.ZRem(context.Background(), deadPrefix+queue, deadjob).Result()
-	if err != nil {
-		return err
-	}
-
-	if done == 0 {
-		return ErrJobMissing
-	}
-
-	var j deadJob
-	if err := json.Unmarshal([]byte(deadjob), &j); err != nil {
-		return err
-	}
-
-	jb, err := json.Marshal(j.Job)
-	if err != nil {
-		return err
-	}
-
-	if err := s.cc.LPush(
-		context.Background(),
-		queuePrefix+queue,
-		string(jb),
-	).Err(); err != nil {
-		return err
-	}
-
-	return nil
-}
