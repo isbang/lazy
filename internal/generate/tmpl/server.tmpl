@@ -39,6 +39,8 @@ func (h {{ . }}JobHandler) handle(ctx context.Context, jobstr string) error {
 		return err
 	}
 
+	job.Attempts++
+
 	return h(ctx, &job)
 }
 
