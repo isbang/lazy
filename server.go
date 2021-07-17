@@ -148,7 +148,7 @@ func (s *Server) addDeadJob(queue string, jobstr string, reason error) {
 	}
 
 	if err := s.cc.ZAdd(context.Background(), deadPrefix+queue, &redis.Z{
-		Score:  float64(time.Now().Add(s.DeadJobTTL).Unix()),
+		Score:  float64(time.Now().Unix()),
 		Member: string(jb),
 	}).Err(); err != nil {
 		l.Error().Err(err).Msg("fail to add dead job")
@@ -206,6 +206,7 @@ func (s *Server) delayJobScheduler(queue string) {
 	}
 }
 
+// deadJobCleaner is a loop for removing old dead jobs.
 func (s *Server) deadJobCleaner(queue string) {
 	defer s.wg.Done()
 
@@ -223,7 +224,7 @@ func (s *Server) deadJobCleaner(queue string) {
 		case now := <-tc.C:
 			if err := s.cc.ZRemRangeByScore(
 				ctx, deadPrefix+queue,
-				"-inf", strconv.FormatInt(now.Unix(), 10),
+				"-inf", strconv.FormatInt(now.Add(-1*s.DeadJobTTL).Unix(), 10),
 			).Err(); err != nil {
 				l.Error().Err(err).Msg("fail to cleanup dead job")
 				s.GracefulStop()
