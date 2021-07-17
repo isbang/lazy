@@ -48,4 +48,4 @@ func (s *Server) Register{{ . }}Job(handler {{ . }}JobHandler) {
 	var j job.{{ . }}
 	s.Server.Register(j.LazyQueueName(), handler.handle)
 }
-{{ end }}
+{{ end -}}
