@@ -32,8 +32,6 @@ type Client struct {
 }
 {{ range .JobNames }}
 func (c *Client) Do{{ . }}(ctx context.Context, job *job.{{ . }}) error {
-	job.CreatedAT = time.Now()
-
 	jb, err := json.Marshal(job)
 	if err != nil {
 		return err
@@ -47,8 +45,6 @@ func (c *Client) Do{{ . }}(ctx context.Context, job *job.{{ . }}) error {
 }
 
 func (c *Client) Do{{ . }}After(ctx context.Context, job *job.{{ . }}, delay time.Duration) error {
-	job.CreatedAT = time.Now()
-
 	jb, err := json.Marshal(job)
 	if err != nil {
 		return err
