@@ -138,8 +138,8 @@ func (s *Server) addDeadJob(queue string, jobstr string, reason error) {
 		Logger()
 
 	jb, err := json.Marshal(deadJob{
-		Job:    jobstr,
-		Reason: reason.Error(),
+		baseJob: baseJob{Job: jobstr},
+		Reason:  reason.Error(),
 	})
 	if err != nil {
 		l.Error().Err(err).Msg("fail to json marshal job")
