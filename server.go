@@ -190,7 +190,8 @@ func (s *Server) delayJobScheduler(queue string) {
 					continue
 				}
 
-				if rem == 0 { // if not removed?
+				if rem == 0 {
+					// Other process already pushed current job.
 					continue
 				}
 
