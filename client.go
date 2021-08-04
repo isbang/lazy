@@ -2,6 +2,7 @@ package lazy
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -18,16 +19,34 @@ type Client struct {
 }
 
 func (c *Client) Do(ctx context.Context, queue string, jobbytes []byte) error {
-	if err := c.cc.RPush(ctx, queuePrefix+queue, string(jobbytes)).Err(); err != nil {
+	jb, err := json.Marshal(baseJob{
+		Job:       jobbytes,
+		CreatedAT: time.Now(),
+		Attempts:  0,
+	})
+	if err != nil {
+		return err
+	}
+
+	if err := c.cc.RPush(ctx, queuePrefix+queue, jb).Err(); err != nil {
 		return err
 	}
 	return nil
 }
 
 func (c *Client) DoAfter(ctx context.Context, queue string, jobbytes []byte, delay time.Duration) error {
+	jb, err := json.Marshal(baseJob{
+		Job:       jobbytes,
+		CreatedAT: time.Now(),
+		Attempts:  0,
+	})
+	if err != nil {
+		return err
+	}
+
 	if err := c.cc.ZAdd(ctx, delayPrefix+queue, &redis.Z{
 		Score:  float64(time.Now().Add(delay).Unix()),
-		Member: string(jobbytes),
+		Member: jb,
 	}).Err(); err != nil {
 		return err
 	}
