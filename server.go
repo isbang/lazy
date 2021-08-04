@@ -50,7 +50,7 @@ func (s *Server) SetFetchTimeout(d time.Duration) {
 	s.FetchTimeout = d
 }
 
-type HandleFunc func(ctx context.Context, jobstr string) error
+type HandleFunc func(ctx context.Context, jobbytes []byte) error
 
 func (s *Server) Register(queue string, handleFunc HandleFunc) {
 	s.jobLock.Lock()
@@ -125,7 +125,7 @@ func (s *Server) handleJob(queue string, jobstr string) {
 		defer cancel()
 	}
 
-	if err := handler(ctx, jobstr); err != nil {
+	if err := handler(ctx, []byte(jobstr)); err != nil {
 		s.addDeadJob(queue, jobstr, err)
 	}
 }

@@ -37,7 +37,7 @@ func (c *Client) Do{{ . }}(ctx context.Context, job *job.{{ . }}) error {
 		return err
 	}
 
-	if err := c.Client.Do(ctx, job.LazyQueueName(), string(jb)); err != nil {
+	if err := c.Client.Do(ctx, job.LazyQueueName(), jb); err != nil {
 		return err
 	}
 
@@ -50,7 +50,7 @@ func (c *Client) Do{{ . }}After(ctx context.Context, job *job.{{ . }}, delay tim
 		return err
 	}
 
-	if err := c.Client.DoAfter(ctx, job.LazyQueueName(), string(jb), delay); err != nil {
+	if err := c.Client.DoAfter(ctx, job.LazyQueueName(), jb, delay); err != nil {
 		return err
 	}
 

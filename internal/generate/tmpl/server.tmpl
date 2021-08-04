@@ -32,10 +32,10 @@ type Server struct {
 {{ range .JobNames }}
 type {{ . }}JobHandler func(ctx context.Context, job *job.{{ . }}) error
 
-func (h {{ . }}JobHandler) handle(ctx context.Context, jobstr string) error {
+func (h {{ . }}JobHandler) handle(ctx context.Context, jobbytes []byte) error {
 	var job job.{{ . }}
 
-	if err := json.Unmarshal([]byte(jobstr), &job); err != nil {
+	if err := json.Unmarshal(jobbytes, &job); err != nil {
 		return err
 	}
 
