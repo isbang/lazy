@@ -20,7 +20,7 @@ type deadJob struct {
 
 type baseJob struct {
 	// Job is the job string.
-	Job string `json:"job"`
+	Job []byte `json:"job"`
 
 	// CreatedAT is the time the job was created.
 	CreatedAT time.Time `json:"created_at"`

@@ -109,11 +109,14 @@ func (s *Server) Run() error {
 		}
 
 		s.wg.Add(1)
-		go s.handleJob(strings.TrimPrefix(result[0], queuePrefix), result[1])
+		go s.handleJob(
+			strings.TrimPrefix(result[0], queuePrefix), // queue
+			[]byte(result[1]),                          // job bytes
+		)
 	}
 }
 
-func (s *Server) handleJob(queue string, jobstr string) {
+func (s *Server) handleJob(queue string, jobbytes []byte) {
 	defer s.wg.Done()
 
 	handler := s.handlerMap[queue]
@@ -125,20 +128,20 @@ func (s *Server) handleJob(queue string, jobstr string) {
 		defer cancel()
 	}
 
-	if err := handler(ctx, []byte(jobstr)); err != nil {
-		s.addDeadJob(queue, jobstr, err)
+	if err := handler(ctx, jobbytes); err != nil {
+		s.addDeadJob(queue, jobbytes, err)
 	}
 }
 
-func (s *Server) addDeadJob(queue string, jobstr string, reason error) {
+func (s *Server) addDeadJob(queue string, jobbytes []byte, reason error) {
 	l := log.With().
 		Str("queue", queue).
 		Str("method", "addDeadJob").
-		Str("job", jobstr).
+		Str("job", string(jobbytes)).
 		Logger()
 
 	jb, err := json.Marshal(deadJob{
-		baseJob: baseJob{Job: jobstr},
+		baseJob: baseJob{Job: jobbytes},
 		Reason:  reason.Error(),
 	})
 	if err != nil {
