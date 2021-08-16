@@ -7,6 +7,7 @@ import (
 )
 
 type Stats struct {
+	Queue   string
 	Running int64
 	Delayed int64
 	Dead    int64
@@ -21,7 +22,8 @@ func getQueueStats(ctx context.Context, cc redis.UniversalClient, name string) (
 		return nil, err
 	}
 
-	var stats Stats
+	stats := &Stats{Queue: name}
+
 	if i64, err := runningCmd.Result(); err != nil {
 		return nil, err
 	} else {
@@ -40,5 +42,5 @@ func getQueueStats(ctx context.Context, cc redis.UniversalClient, name string) (
 		stats.Dead = i64
 	}
 
-	return &stats, nil
+	return stats, nil
 }
