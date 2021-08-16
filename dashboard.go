@@ -29,14 +29,14 @@ func NewDashboard(cc redis.UniversalClient, pathPrefix string, queues ...string)
 	r.Use(middleware.Recoverer)
 
 	r.Route(d.prefix, func(r chi.Router) {
-		r.Get("/api/stats", d.ListQueueInfo)
-		r.Get("/api/stats/{queue}", d.GetQueueInfo)
+		r.Get("/api/stats", d.ListQueueStats)
+		r.Get("/api/stats/{queue}", d.GetQueueStat)
 	})
 
 	return r
 }
 
-func (d *dashboard) GetQueueInfo(w http.ResponseWriter, r *http.Request) {
+func (d *dashboard) GetQueueStat(w http.ResponseWriter, r *http.Request) {
 	queue := chi.URLParam(r, "queue")
 
 	if !d.isQueueKnown(queue) {
@@ -44,7 +44,7 @@ func (d *dashboard) GetQueueInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	stats, err := getQueueStats(r.Context(), d.cc, queue)
+	stat, err := getQueueStats(r.Context(), d.cc, queue)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -52,7 +52,7 @@ func (d *dashboard) GetQueueInfo(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
-	if err := json.NewEncoder(w).Encode(stats); err != nil {
+	if err := json.NewEncoder(w).Encode(stat); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -60,7 +60,7 @@ func (d *dashboard) GetQueueInfo(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func (d *dashboard) ListQueueInfo(w http.ResponseWriter, r *http.Request) {
+func (d *dashboard) ListQueueStats(w http.ResponseWriter, r *http.Request) {
 	stats, err := d.listQueueInfo(r.Context())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
